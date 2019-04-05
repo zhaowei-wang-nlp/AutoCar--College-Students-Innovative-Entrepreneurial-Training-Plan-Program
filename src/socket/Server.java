@@ -38,6 +38,7 @@ public class Server {
 		ServerSocket server;
 		try {
 			server = new ServerSocket(port, 20);
+			System.out.println("Server Built");
 			while (true) {
 				Socket socket = server.accept();
 				System.out.println("Connection is built");
@@ -58,7 +59,10 @@ class subThread implements Runnable{
 	public void run() {
 		try {
 			BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-			
+			/*byte[] bytes = new byte[1024];
+			int a = socket.getInputStream().read(bytes);
+			String b = new String(bytes,0,a,"utf-8");*/
+			//first handshake
 			String s = readPackage(3,br);
 			String host = getField(s,"HOST");
 			String password = getField(s,"CODE");
@@ -70,15 +74,22 @@ class subThread implements Runnable{
 				throw new Exception("Wrong password");
 			}
 			System.out.println("user confirtmed");
-			socket.getOutputStream().write(("HOST:"+host+"\r\n"+"FUCTION:PERMISSION").getBytes("utf-8"));
+			
+			//second handshake
+			socket.getOutputStream().write(("HOST:"+host+"\r\n"+"FUCTION:PERMISSION\r\n").getBytes("utf-8"));
 			System.out.println("PERSION sent");
+			
+			//thrid handshake
 			s = readPackage(2, br);
 			String confirmHost = getField(s,"HOST");
 			if(!(confirmHost.equals(host)&&s.indexOf("BUILD")!=-1)) {
 				throw new Exception("Wrong confirming");
 			}
-			socket.getInputStream().close();
-			socket.getOutputStream().close();
+			
+			while(true) {
+				s = readPackage(2,br);
+			}
+			
 			socket.close();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -89,7 +100,7 @@ class subThread implements Runnable{
 	}
 	private String getField(String s,String field) {
 		int start = s.indexOf(field+":")+field.length()+1;
-		int end = s.indexOf("\r\n");
+		int end = s.indexOf("\r\n",start);
 		return s.substring(start, end);
 	}
 	private String readPackage(int n,BufferedReader br) {
