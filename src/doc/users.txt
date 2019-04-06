@@ -1,4 +1,1 @@
 JumpingBear 199806
-car1 abc
-car2 abc
-car3 abc

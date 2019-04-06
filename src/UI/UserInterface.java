@@ -14,7 +14,7 @@ import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.io.IOException;
-
+import java.util.Map;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -29,13 +29,12 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.ActionEvent;
-import javax.swing.event.MenuListener;
 
 import socket.Client;
-import socket.Server;
+import socket.Location;
 
-import javax.swing.event.MenuEvent;
 import javax.swing.SwingConstants;
+import javax.swing.Timer;
 
 public class UserInterface extends JFrame {
 	private JPanel contentPane;
@@ -47,6 +46,7 @@ public class UserInterface extends JFrame {
 	private JLabel userNameLabel;
 	private boolean authorized = false;
 	private Client client = new Client();
+	private Timer timer;
 
 	/**
 	 * Launch the application.
@@ -132,6 +132,23 @@ public class UserInterface extends JFrame {
 		rightPanel.setBounds(215, 35, 765, 535);
 		contentPane.add(rightPanel);
 		rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.X_AXIS));
+		
+		timer = new Timer(500,new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Graphics g = rightPanel.getGraphics();
+				rightPanel.updateUI();
+				//g.clearRect(rightPanel.getX(), rightPanel.getY(), rightPanel.getWidth(), rightPanel.getHeight());
+				for (Map.Entry<String, Location> entry : client.carLocation.entrySet()) {
+					int x = (int) (entry.getValue().x - 10);
+					int y = (int) (entry.getValue().y - 10);
+					g.drawOval(x, y, 20, 20);
+				}
+			}
+			
+		});
+		
 		
 		JPanel leftPanel = new JPanel();
 		leftPanel.setBounds(0, 35, 212, 536);
@@ -291,6 +308,7 @@ class NewPanel extends JPanel {
 	  public void paintComponent(Graphics g) {
 	   int x = 0, y = 0;
 	   ImageIcon icon = new ImageIcon(path);// 003.jpg是测试图片在项目的根目录下
+	   g.clearRect(x, y, this.getSize().width, this.getSize().height);
 	   g.drawImage(icon.getImage(), x, y, getSize().width,
 	     getSize().height, this);// 图片会自动缩放
 	  }

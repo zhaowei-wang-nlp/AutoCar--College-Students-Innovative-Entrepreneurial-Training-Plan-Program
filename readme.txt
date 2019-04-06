@@ -20,7 +20,8 @@ FUCTION:BUILD
 其他数据：
 小车指令
 HOST:car3\r\n
-LOCATION:user  latitude39.5N longitude34.6E
+LOCATION:user  290 590
+（user字段可以取特殊值ALL代表所有用户）
 
 小车指令
 HOST:car3\r\n

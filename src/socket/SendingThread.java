@@ -16,30 +16,43 @@ public class SendingThread extends MyThread implements Runnable{
 			/*byte[] bytes = new byte[1024];
 			int a = socket.getInputStream().read(bytes);
 			String b = new String(bytes,0,a,"utf-8");*/
-			//first handshake
-			String s = readPackage(3,br);
-			String host = getFieldValue(s,"HOST");
-			String password = getFieldValue(s,"CODE");
 			
-			this.handShaking(s, br, host, password);
-			
-			
-			synchronized(Server.userState.get(host)) {
-				Server.userState.get(host).online = true;
+			String host = this.handShaking(socket);
+			String s;
+			if(isUser) {
+			synchronized(Server.clientState.get(host)) {
+				Server.clientState.get(host).online = true;
 			}
 			
 			
-			while(Server.userState.get(host).online) {
-				synchronized(Server.userState.get(host)) {
-					Server.userState.get(host).wait();
-					while(!Server.userState.get(host).info.isEmpty()) {
-						String info = Server.userState.get(host).info.get(0);
+			while(Server.clientState.get(host).online) {
+				synchronized(Server.clientState.get(host)) {
+					Server.clientState.get(host).wait();
+					while(!Server.clientState.get(host).info.isEmpty()) {
+						String info = Server.clientState.get(host).info.get(0);
 						socket.getOutputStream().write(info.getBytes("utf-8"));
 					}
 				}
 			}
 			System.out.println(host+"log off");
 			socket.close();
+			}
+			else {
+				synchronized(Server.carState.get(host)) {
+					Server.carState.get(host).online = true;
+				}
+				while(Server.carState.get(host).online) {
+					synchronized(Server.carState.get(host)) {
+						Server.carState.get(host).wait();
+						while(!Server.carState.get(host).info.isEmpty()) {
+							String info = Server.carState.get(host).info.get(0);
+							socket.getOutputStream().write(info.getBytes("utf-8"));
+						}
+					}
+				}
+				System.out.println(host+"log off");
+				socket.close();
+			}
 		}     catch (IOException e) {
 				e.printStackTrace();
 			} catch (Exception e) {

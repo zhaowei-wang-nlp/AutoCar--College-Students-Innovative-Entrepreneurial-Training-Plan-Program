@@ -14,8 +14,10 @@ import java.util.List;
 import java.util.Map;
 
 public class Server {
-	static Map<String,String> userMap = Collections.synchronizedMap(new HashMap<String,String>());
-	static Map<String,UserState> userState = Collections.synchronizedMap(new HashMap<String,UserState>());
+	static Map<String,String> clientMap = Collections.synchronizedMap(new HashMap<String,String>());
+	static Map<String,State> clientState = Collections.synchronizedMap(new HashMap<String,State>());
+	static Map<String,String> carMap = Collections.synchronizedMap(new HashMap<String,String>());
+	static Map<String,State> carState = Collections.synchronizedMap(new HashMap<String,State>());
 	public static void main(String[] args) {
 		Server s = new Server();
 		s.mainFuction();
@@ -27,8 +29,8 @@ public class Server {
 			String line;
 			while((line = buffer.readLine())!=null) {
 				String[] user = line.split("\\s");
-				userMap.put(user[0], user[1]);
-				userState.put(user[0], new UserState());
+				clientMap.put(user[0], user[1]);
+				clientState.put(user[0], new State());
 			}
 			buffer.close();
 		} catch (FileNotFoundException e) {
@@ -37,6 +39,22 @@ public class Server {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		File file1 = new File("src\\doc\\cars.txt");
+		try {
+			BufferedReader buffer = new BufferedReader(new FileReader(file1));
+			String line;
+			while((line = buffer.readLine())!=null) {
+				String[] car = line.split("\\s");
+				carMap.put(car[0], car[1]);
+				carState.put(car[0], new State());
+			}
+			buffer.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 	}
 	public void mainFuction() {
 		new Thread(new ServerThread()).start();
@@ -49,10 +67,9 @@ public class Server {
 				Socket socket = server.accept();
 				
 				System.out.println("Recving connection is built");
-				new Thread(new RecvingFromUserThread(socket)).start();
+				new Thread(new RecvingThread(socket)).start();
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -78,7 +95,7 @@ class ServerThread implements Runnable{
 	}
 	
 }
-class UserState{
+class State{
 	List<String> info=Collections.synchronizedList(new ArrayList<>());
 	Boolean online=false;
 }
