@@ -22,15 +22,9 @@ FUCTION:BUILD
 HOST:car3\r\n
 LOCATION:user  290 590
 （user字段可以取特殊值ALL代表所有用户）
-
-小车指令
 HOST:car3\r\n
-PICTURE:user
-(picture)
+LOCATION:ALL  290 590 speed
 
-用户指令
-HOST:xxx\r\n
-GETPICTURE:car3 
 
 用户指令
 HOST:xxx\r\n
@@ -40,9 +34,6 @@ MOVE:car2 NORTH（|SOUTH|EAST|WEST） 3.3METER\r\n
 HOST:xxx\r\n
 CEASE:car4
 
-用户指令
-HOST:xxx\r\n
-STOPPICTURE
 
 用户小车指令
 HOST:xxx\r\n
@@ -51,3 +42,6 @@ DISCONNECT
 
 
 当用户在握手的时候出现异常（比如密码输入错误），直接在run方法中处理异常，然后保证处理异常之后run方法结束，即线程结束。用户在再次输入密码的时候，服务器重新开线程和用户建立socket连接。
+car:建立连接ok 发送信息(location)ok 接受信息(move,cease)ok
+client:建立连接ok 发送信息(move,cease) 接受信息(location)ok 辅助选点ok 速度显示ok
+server:建立连接ok 接收消息(move,cease,location) 转发消息ok

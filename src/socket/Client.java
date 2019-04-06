@@ -17,9 +17,10 @@ public class Client {
 	private Socket sendingSocket = null;
 	private Socket recvingSocket = null;
 	// 用户名和地址
-	private String userName;
-	private String password;
+	public String userName;
+	public String password;
 	public final Map<String, Location> carLocation = Collections.synchronizedMap(new HashMap<>());
+	public final Map<String, Double> carVelocity = Collections.synchronizedMap(new HashMap<>());
 
 	private String readPackage(int n, BufferedReader br) {
 		StringBuilder sb = new StringBuilder();
@@ -60,18 +61,23 @@ public class Client {
 	public void getPicture(String car) {
 		try {
 			sendingSocket.getOutputStream()
-					.write(("HOST:" + userName + "\r\n" + "GETPICTURE:" + car).getBytes("utf-8"));
+					.write(("HOST:" + userName + "\r\n" + "GETPICTURE:" + car+"\r\n").getBytes("utf-8"));
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-
-	public void moveCar(String car, String direction, String length) {
+	public void moveCar(int selectedCar,int userPointx,int userPointy) {
 		try {
+			StringBuilder sb = new StringBuilder();
+			Location current = carLocation.get("car"+selectedCar);
+			sb.append(" X "+(current.x-userPointx));
+			sb.append(" Y "+(current.y-userPointy));
+			String command = "HOST:" + userName+"\r\n";
+			command += "MOVE:" + sb.toString()+"\r\n";
 			sendingSocket.getOutputStream()
-					.write(("HOST:" + userName + "\r\n" + "MOVE:" + car + " " + direction + " " + length + "\r\n")
+					.write((command)
 							.getBytes("utf-8"));
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
@@ -80,9 +86,9 @@ public class Client {
 		}
 	}
 
-	public void stopCar(String car) {
+	public void stopCar(int car) {
 		try {
-			sendingSocket.getOutputStream().write(("HOST:" + userName + "\r\n" + "CEASE:" + car).getBytes("utf-8"));
+			sendingSocket.getOutputStream().write(("HOST:" + userName + "\r\n" + "CEASE:" + "car"+car+"\r\n").getBytes("utf-8"));
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -155,11 +161,17 @@ public class Client {
 				while(!client.recvingSocket.isClosed()) {
 					String command = this.readPackage(2, br);
 					String host = this.getFieldValue(command, "HOST");
+					
 					if(command.indexOf("LOCATION")!=-1) {
 						String location = this.getFieldValue(command, "LOCATION");
 						String[] sarray = location.split("\\s");
+						synchronized(client.carLocation) {
 						client.carLocation.put(host, new Location(Double.parseDouble(sarray[1]),
 								Double.parseDouble(sarray[2])));
+						}
+						synchronized(client.carVelocity) {
+							client.carVelocity.put(host, Double.parseDouble(sarray[2]));
+						}
 						//此处只使用了一个操作，所以能保证原子性
 					}
 					else if(command.indexOf("PICTURE")!=-1) {

@@ -1,8 +1,6 @@
 package socket;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.Socket;
 
 public class SendingThread extends MyThread implements Runnable{
@@ -12,13 +10,11 @@ public class SendingThread extends MyThread implements Runnable{
 	@Override
 	public void run() {
 		try {
-			BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			/*byte[] bytes = new byte[1024];
 			int a = socket.getInputStream().read(bytes);
 			String b = new String(bytes,0,a,"utf-8");*/
 			
 			String host = this.handShaking(socket);
-			String s;
 			if(isUser) {
 			synchronized(Server.clientState.get(host)) {
 				Server.clientState.get(host).online = true;
