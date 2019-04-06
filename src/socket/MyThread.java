@@ -34,14 +34,16 @@ public class MyThread {
 		return sb.toString();
 	}
 
-	protected void handShake(String s, BufferedReader br, String host, String password) throws Exception{//将异常抛到run方法中
+	protected void handShaking(String s, BufferedReader br, String host, String password) throws Exception{//将异常抛到run方法中
 			String rightPassword = Server.userMap.get(host);
 			if (rightPassword == null) {
-				socket.getOutputStream().write("Invalid username".getBytes("utf-8"));
-				throw new Exception("Invalid user name");
+				socket.getOutputStream().write(("HOST:" + host + "\r\nInvalid username").getBytes("utf-8"));
+				socket.close();
+				throw new Exception("Invalid username");
 			}
 			if (!Server.userMap.get(host).equals(password)) {
-				socket.getOutputStream().write("Invalid password".getBytes("utf-8"));
+				socket.getOutputStream().write(("HOST:"+ host +"\r\nInvalid password").getBytes("utf-8"));
+				socket.close();
 				throw new Exception("Wrong password");
 			}
 			System.out.println("user confirtmed");
@@ -54,7 +56,8 @@ public class MyThread {
 			s = readPackage(2, br);
 			String confirmHost = getFieldValue(s, "HOST");
 			if (!(confirmHost.equals(host) && s.indexOf("BUILD") != -1)) {
-				socket.getOutputStream().write("different user".getBytes("utf-8"));
+				socket.getOutputStream().write(("HOST:" + host + "different user").getBytes("utf-8"));
+				socket.close();
 				throw new Exception("Wrong confirming");
 			}
 	}

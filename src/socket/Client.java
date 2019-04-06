@@ -7,9 +7,13 @@ import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 
 public class Client {
+	//要连接的地址
 		private String host = "127.0.0.1"; 
-		private int port = 55533;
-		private Socket socket = null;
+		private int portForSending = 55533;
+		private int portForRecving = 55532;
+		private Socket sendingSocket = null;
+		private Socket recvingSocket = null;
+	//用户名和地址
 		private String userName;
 		private String password;
 		public static void main(String[] args) {
@@ -33,17 +37,29 @@ public class Client {
 		}
 		
 		public void logOff() {
-			if(socket!=null) {
 			    try {
-					socket.close();
+			    	if(sendingSocket!=null) {
+			    	BufferedReader br = new BufferedReader(new InputStreamReader(sendingSocket.getInputStream(),"utf-8"));;
+			    	while(true) {
+				    	sendingSocket.getOutputStream().write(("HOST:"+userName+"\r\n"+
+				    					"DISCONNECT\r\n").getBytes("utf-8"));
+				    	if(br.readLine().equals("GET DISCONNECT")) {
+				    		sendingSocket.getOutputStream().write("ALREADY DISCONNECT\r\n".getBytes("utf-8"));
+				    		break;
+				    	}
+			    	}
+
+			    		sendingSocket.close();
+			    	}
+			    	if(recvingSocket!=null)
+			    		recvingSocket.close();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-			}
 		}
 		public void getPicture(String car) {
 			try {
-				socket.getOutputStream().write(("HOST:"+userName+"\r\n"+
+				sendingSocket.getOutputStream().write(("HOST:"+userName+"\r\n"+
 						"GETPICTURE:"+car).getBytes("utf-8"));
 			} catch (UnsupportedEncodingException e) {
 				e.printStackTrace();
@@ -53,7 +69,7 @@ public class Client {
 		}
 		public void moveCar(String car,String direction,String length) {
 			try {
-				socket.getOutputStream().write(("HOST:"+userName+"\r\n"+
+				sendingSocket.getOutputStream().write(("HOST:"+userName+"\r\n"+
 						"MOVE:"+car+" "+direction+" "+length+"\r\n").getBytes("utf-8"));
 			} catch (UnsupportedEncodingException e) {
 				e.printStackTrace();
@@ -63,7 +79,7 @@ public class Client {
 		}
 		public void stopCar(String car) {
 			try {
-				socket.getOutputStream().write(("HOST:"+userName+"\r\n"+
+				sendingSocket.getOutputStream().write(("HOST:"+userName+"\r\n"+
 				"CEASE:"+car).getBytes("utf-8"));
 			} catch (UnsupportedEncodingException e) {
 				e.printStackTrace();
@@ -71,41 +87,58 @@ public class Client {
 				e.printStackTrace();
 			}
 		}
-		public boolean logOn(String userName,String password){
+		public String logOn(String userName,String password){
 		    this.userName = userName;
 		    this.password = password;
 			try {
-				socket = new Socket(host, port);
-				// 建立连接后获得输出流
-				System.out.println("Client Built");
+				sendingSocket = new Socket(host, portForSending);
+
+				System.out.println("Client init");
+				//第一次握手
 			    String message="HOST:"+userName+"\r\n" + 
 			    		"CODE:"+password+"\r\n" + "FUCTION:REQUIRE\r\n";
-			    System.out.println("Sent");
-			    socket.getOutputStream().write(message.getBytes("UTF-8"));
-			    BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream(),"utf-8"));
+			    System.out.println("First handshaking sent");
+			    sendingSocket.getOutputStream().write(message.getBytes("UTF-8"));
 			    
+			    //第二次握手
+			    System.out.println("Second handshaking get");
+			    BufferedReader br = new BufferedReader(new InputStreamReader(sendingSocket.getInputStream(),"utf-8"));
 			    String second = this.readPackage(2,br);
-			    System.out.println("Get Permision");
 			    int location = second.indexOf("FUCTION:PERMISSION");
 			    if(location==-1) {
-			    	throw new Exception("User authentication failed");
+			    	sendingSocket.close();
+			    	return second.split("\r\n")[1];//获得第二个包中的提示信息
 			    }
-			    socket.getOutputStream().write(("HOST:"+userName+"\r\n" + 
+			    
+			    //第三次握手
+			    System.out.println("Third handshaking sent");
+			    sendingSocket.getOutputStream().write(("HOST:"+userName+"\r\n" + 
 			    		"FUCTION:BUILD\r\n").getBytes("utf-8"));
-			    socket.getOutputStream().write(("HOST:"+userName+"\r\n"+"CONNECTION ").getBytes("utf-8"));
 			    //握手完毕
-			   	return true;
+			    
+			    //接受socket握手
+			    recvingSocket = new Socket(host, portForRecving);
+			    message="HOST:"+userName+"\r\n" + 
+			    		"CODE:"+password+"\r\n" + "FUCTION:REQUIRE\r\n";
+			    recvingSocket.getOutputStream().write(message.getBytes("UTF-8"));
+			    System.out.println("First handshaking sent");
+			    
+			    System.out.println("Second handshaking get");
+			    br = new BufferedReader(new InputStreamReader(recvingSocket.getInputStream(),"utf-8"));
+			    second = this.readPackage(2,br);
+			    location = second.indexOf("FUCTION:PERMISSION");
+			    if(location==-1) {
+			    	recvingSocket.close();
+			    	return second.split("\r\n")[1];//获得第二个包中的提示信息
+			    }
+			    
+			    System.out.println("Third handshaking sent");
+			    recvingSocket.getOutputStream().write(("HOST:"+userName+"\r\n" + 
+			    		"FUCTION:BUILD\r\n").getBytes("utf-8"));
+			   	return "Connection built";
 			} catch (IOException e) {
 				e.printStackTrace();
-			} catch (Exception e) {
-				System.out.println(e.getMessage());
-				e.printStackTrace();
 			}
-			return false;
+			return "Data transfer wrongly";
 		  }
-		private String getField(String s,String field) {
-			int start = s.indexOf(field+":")+field.length()+1;
-			int end = s.indexOf("\r\n",start);
-			return s.substring(start, end);
-		}
 }

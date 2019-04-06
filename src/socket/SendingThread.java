@@ -21,7 +21,7 @@ public class SendingThread extends MyThread implements Runnable{
 			String host = getFieldValue(s,"HOST");
 			String password = getFieldValue(s,"CODE");
 			
-			this.handShake(s, br, host, password);
+			this.handShaking(s, br, host, password);
 			
 			
 			synchronized(Server.userState.get(host)) {
@@ -38,6 +38,7 @@ public class SendingThread extends MyThread implements Runnable{
 					}
 				}
 			}
+			System.out.println(host+"log off");
 			socket.close();
 		}     catch (IOException e) {
 				e.printStackTrace();
