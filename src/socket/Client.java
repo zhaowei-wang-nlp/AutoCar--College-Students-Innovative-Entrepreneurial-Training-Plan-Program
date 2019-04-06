@@ -3,13 +3,18 @@ package socket;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 
 public class Client {
+		private String host = "127.0.0.1"; 
+		private int port = 55533;
+		private Socket socket = null;
+		private String userName;
+		private String password;
 		public static void main(String[] args) {
 			Client c = new Client();
-			c.mainFuction("JumpingBear", "199806");
+			c.logOn("JumpingBear","19986");
 		}
 		private String readPackage(int n,BufferedReader br) {
 			StringBuilder sb = new StringBuilder();
@@ -23,17 +28,56 @@ public class Client {
 			}
 			return sb.toString();
 		}
-		public void mainFuction(String userName, String password){
-		    // 要连接的服务端IP地址和端口
-		    String host = "127.0.0.1"; 
-		    int port = 55533;
-		    // 与服务端建立连接
-		    Socket socket;
+		public Client() {
+			
+		}
+		
+		public void logOff() {
+			if(socket!=null) {
+			    try {
+					socket.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		public void getPicture(String car) {
+			try {
+				socket.getOutputStream().write(("HOST:"+userName+"\r\n"+
+						"GETPICTURE:"+car).getBytes("utf-8"));
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		public void moveCar(String car,String direction,String length) {
+			try {
+				socket.getOutputStream().write(("HOST:"+userName+"\r\n"+
+						"MOVE:"+car+" "+direction+" "+length+"\r\n").getBytes("utf-8"));
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		public void stopCar(String car) {
+			try {
+				socket.getOutputStream().write(("HOST:"+userName+"\r\n"+
+				"CEASE:"+car).getBytes("utf-8"));
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		public boolean logOn(String userName,String password){
+		    this.userName = userName;
+		    this.password = password;
 			try {
 				socket = new Socket(host, port);
 				// 建立连接后获得输出流
 				System.out.println("Client Built");
-			    OutputStream outputStream = socket.getOutputStream();
 			    String message="HOST:"+userName+"\r\n" + 
 			    		"CODE:"+password+"\r\n" + "FUCTION:REQUIRE\r\n";
 			    System.out.println("Sent");
@@ -48,16 +92,16 @@ public class Client {
 			    }
 			    socket.getOutputStream().write(("HOST:"+userName+"\r\n" + 
 			    		"FUCTION:BUILD\r\n").getBytes("utf-8"));
-			    socket.getOutputStream().write(("HOST:"+userName+"\r\n"+"CONNECTION "));
-			    socket.shutdownOutput();
-			    socket.close();
+			    socket.getOutputStream().write(("HOST:"+userName+"\r\n"+"CONNECTION ").getBytes("utf-8"));
+			    //握手完毕
+			   	return true;
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (Exception e) {
 				System.out.println(e.getMessage());
 				e.printStackTrace();
 			}
-		    
+			return false;
 		  }
 		private String getField(String s,String field) {
 			int start = s.indexOf(field+":")+field.length()+1;

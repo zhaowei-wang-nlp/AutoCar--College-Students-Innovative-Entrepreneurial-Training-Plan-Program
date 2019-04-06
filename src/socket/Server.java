@@ -5,14 +5,17 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Server {
-	static Map<String,String> userMap = new HashMap<String,String>();
+	static Map<String,String> userMap = Collections.synchronizedMap(new HashMap<String,String>());
+	static Map<String,UserState> userState = Collections.synchronizedMap(new HashMap<String,UserState>());
 	public static void main(String[] args) {
 		Server s = new Server();
 		s.mainFuction();
@@ -25,7 +28,9 @@ public class Server {
 			while((line = buffer.readLine())!=null) {
 				String[] user = line.split("\\s");
 				userMap.put(user[0], user[1]);
+				userState.put(user[0], new UserState());
 			}
+			buffer.close();
 		} catch (FileNotFoundException e) {
 			System.out.println("loading users file failed");
 			e.printStackTrace();
@@ -34,15 +39,17 @@ public class Server {
 		}
 	}
 	public void mainFuction() {
+		new Thread(new ServerThread()).start();
 		int port = 55533;
 		ServerSocket server;
 		try {
 			server = new ServerSocket(port, 20);
-			System.out.println("Server Built");
+			System.out.println("Sending server Built");
 			while (true) {
 				Socket socket = server.accept();
-				System.out.println("Connection is built");
-				new Thread(new subThread(socket)).start();
+				
+				System.out.println("Recving connection is built");
+				new Thread(new RecvingFromUserThread(socket)).start();
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -50,70 +57,28 @@ public class Server {
 		}
 	}
 }
-class subThread implements Runnable{
-	private Socket socket;
-	subThread(Socket socket){
-		this.socket = socket;
-	}
+class ServerThread implements Runnable{
 	@Override
 	public void run() {
+		int port = 55532;
+		ServerSocket server;
 		try {
-			BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-			/*byte[] bytes = new byte[1024];
-			int a = socket.getInputStream().read(bytes);
-			String b = new String(bytes,0,a,"utf-8");*/
-			//first handshake
-			String s = readPackage(3,br);
-			String host = getField(s,"HOST");
-			String password = getField(s,"CODE");
-			String rightPassword = Server.userMap.get(host);
-			if(rightPassword==null) {
-				throw new Exception("Invalid user name");
+			server = new ServerSocket(port, 20);
+			System.out.println("Sending Server Built");
+			while (true) {
+				Socket socket = server.accept();
+				System.out.println("Sending connection is built");
+				new Thread(new SendingThread(socket)).start();
 			}
-			if(!Server.userMap.get(host).equals(password)) {
-				throw new Exception("Wrong password");
-			}
-			System.out.println("user confirtmed");
-			
-			//second handshake
-			socket.getOutputStream().write(("HOST:"+host+"\r\n"+"FUCTION:PERMISSION\r\n").getBytes("utf-8"));
-			System.out.println("PERSION sent");
-			
-			//thrid handshake
-			s = readPackage(2, br);
-			String confirmHost = getField(s,"HOST");
-			if(!(confirmHost.equals(host)&&s.indexOf("BUILD")!=-1)) {
-				throw new Exception("Wrong confirming");
-			}
-			
-			while(true) {
-				s = readPackage(2,br);
-			}
-			
-			socket.close();
 		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (Exception e) {
-			System.out.println(e.getMessage());
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	}
-	private String getField(String s,String field) {
-		int start = s.indexOf(field+":")+field.length()+1;
-		int end = s.indexOf("\r\n",start);
-		return s.substring(start, end);
-	}
-	private String readPackage(int n,BufferedReader br) {
-		StringBuilder sb = new StringBuilder();
-		for(int i=0;i<n;i++) {
-			try {
-				sb.append(br.readLine()+"\r\n");
-			} catch (IOException e) {
-				System.out.println("Read Packet Wrongly");
-				e.printStackTrace();
-			}
-		}
-		return sb.toString();
+		
 	}
 	
+}
+class UserState{
+	List<String> info=Collections.synchronizedList(new ArrayList<>());
+	Boolean online=false;
 }

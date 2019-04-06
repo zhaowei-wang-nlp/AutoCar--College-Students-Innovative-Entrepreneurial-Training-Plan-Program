@@ -1,49 +1,48 @@
 package UI;
-import java.awt.BorderLayout;
-import java.awt.EventQueue;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.border.EmptyBorder;
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
-import javax.swing.SwingConstants;
-import javax.swing.JTextPane;
-import java.awt.Color;
-import java.awt.Font;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
+import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.io.IOException;
 
-import javax.swing.DropMode;
+
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JTextField;
 import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.ListSelectionModel;
-import javax.swing.JSpinner;
-import javax.swing.AbstractListModel;
-import javax.swing.SpinnerListModel;
-import javax.swing.JScrollPane;
-import javax.swing.JInternalFrame;
-import javax.swing.JSplitPane;
 import javax.swing.BoxLayout;
 import java.awt.Component;
 import javax.swing.Box;
-import java.awt.List;
 import javax.swing.JComboBox;
 import javax.swing.DefaultComboBoxModel;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import javax.swing.event.MenuListener;
+
+import socket.Client;
+import socket.Server;
+
+import javax.swing.event.MenuEvent;
 
 public class UserInterface extends JFrame {
-
 	private JPanel contentPane;
 	private JTextField txtms;
 	private JTextField textField;
 	private NewPanel rightPanel;
+	private LogOn logOn;
+	private JFrame jf = this;
+	private boolean authorized = false;
+	private Client client = new Client();
 
 	/**
 	 * Launch the application.
@@ -64,6 +63,7 @@ public class UserInterface extends JFrame {
 	 * Create the frame.
 	 */
 	public UserInterface() {
+		logOn = new LogOn();
 		setTitle("\u667A\u80FD\u9664\u51B0\u8F66");
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setBounds(100, 100, 1000, 618);
@@ -71,7 +71,7 @@ public class UserInterface extends JFrame {
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
-		Image image = Toolkit.getDefaultToolkit().getImage("src//UI//icon.png");
+		Image image = Toolkit.getDefaultToolkit().getImage("src//icon.png");
 		this.setIconImage(image);
 		
 		JMenuBar menuBar = new JMenuBar();
@@ -79,6 +79,17 @@ public class UserInterface extends JFrame {
 		contentPane.add(menuBar);
 		
 		JMenu map = new JMenu("\u767B\u5F55");
+		map.addMenuListener(new MenuListener() {
+			public void menuCanceled(MenuEvent arg0) {
+			}
+			public void menuDeselected(MenuEvent arg0) {
+				
+			}
+			public void menuSelected(MenuEvent arg0) {
+				logOn.setVisible(true);
+				logOn.setAlwaysOnTop(true);
+			}
+		});
 		menuBar.add(map);
 		
 		JMenu carCamera = new JMenu("\u5730\u56FE\u754C\u9762");
@@ -96,7 +107,7 @@ public class UserInterface extends JFrame {
 		JMenu menu = new JMenu("\u5173\u4E8E\u6211\u4EEC");
 		menuBar.add(menu);
 		
-		rightPanel = new NewPanel("src//UI//map.png");
+		rightPanel = new NewPanel("src//map.png");
 		rightPanel.setBounds(215, 35, 765, 535);
 		contentPane.add(rightPanel);
 		rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.X_AXIS));
@@ -135,7 +146,7 @@ public class UserInterface extends JFrame {
 		verticalGlue.setBounds(212, 0, 0, 536);
 		leftPanel.add(verticalGlue);
 		
-		JPanel head = new NewPanel("src//UI//pikacu.jpg");
+		JPanel head = new NewPanel("src//pikacu.jpg");
 		head.setBounds(27, 13, 150, 130);
 		leftPanel.add(head);
 		
@@ -156,9 +167,74 @@ public class UserInterface extends JFrame {
 		
 		
 	}
-	public void updateUI() {
-		this.rightPanel.resetPath("src//UI//camera.jpg");
+	public class LogOn extends JFrame {    //继承JFrame顶层容器类
+		
+		//定义组件
+		JPanel jp1,jp2,jp3;    //定义面板
+		JTextField jtf1;        //定义文本框
+		JPasswordField jpf1;    //定义密码框
+		JLabel jlb1,jlb2;        //定义标签
+		JButton jb1,jb2;        //定义按钮
+		JFrame lg = this;
+		
+		public LogOn()        //构造函数
+		{
+			//创建组件
+			jp1=new JPanel();    //创建三个面板
+			jp2=new JPanel();
+			jp3=new JPanel();
+			
+			jlb1=new JLabel("用户名");    //创建两个标签
+			jlb2=new JLabel("密	  码");
+			
+			jb1=new JButton("登录");    //创建两个按钮
+			jb2=new JButton("清空");
+			jtf1=new JTextField(10);     //创建文本框
+			jpf1=new JPasswordField(10);    //创建密码框
+			
+			jb1.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					String userName = jtf1.getText();
+					String password = new String(jpf1.getPassword());
+					authorized = client.logOn(userName, password);
+					if(authorized) {
+						JOptionPane.showMessageDialog(null,"密码或用户名输入错误","警告",JOptionPane.ERROR_MESSAGE); 
+					}
+				}
+			});
+			jb2.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					jtf1.setText("");
+					jpf1.setText("");
+				}
+			});
+			//设置布局管理器
+			getContentPane().setLayout(new GridLayout(3,1));    //网格布局，3行一列
+			
+			//添加组件
+			getContentPane().add(jp1);    //添加面板
+			getContentPane().add(jp2);
+			getContentPane().add(jp3);
+			
+			jp1.add(jlb1);    //添加面板1的标签和文本框
+			jp1.add(jtf1);
+			
+			jp2.add(jlb2);    //添加面板2的标签和密码框
+			jp2.add(jpf1);
+			
+			jp3.add(jb1);    //添加面板3的按钮
+			jp3.add(jb2);
+			
+			//设置窗口属性
+			this.setTitle("登录界面");    //创建界面标题
+			this.setSize(300, 200);        //设置界面像素
+			this.setLocation(500, 100);    //设置界面初始位置
+		}
 	}
+	public void updateUI() {
+		this.rightPanel.resetPath("src//camera.jpg");
+	}
+	
 }
 class NewPanel extends JPanel {
 	String path;
