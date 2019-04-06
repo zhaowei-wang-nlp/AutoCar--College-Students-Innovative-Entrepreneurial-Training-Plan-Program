@@ -53,6 +53,7 @@ public class Client {
 			}
 			if (recvingSocket != null)
 				recvingSocket.close();
+			System.out.println(recvingSocket.isClosed());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

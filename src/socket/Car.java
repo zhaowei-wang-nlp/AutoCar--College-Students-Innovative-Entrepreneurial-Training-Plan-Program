@@ -163,12 +163,10 @@ public class Car {
 					if (location == null) {
 						time = System.currentTimeMillis();
 						location = l;
-						System.out.println("location sent");
 						sendingSocket.getOutputStream().write(
 								("HOST:" + carName + "\r\nLOCATION:ALL " + location.x + " " + location.y + "0\r\n")
 										.getBytes("utf-8"));
 					} else {
-						System.out.println("location sent");
 						long currentTime = System.currentTimeMillis();
 						double speed = Math
 								.sqrt((l.x - location.x) * (l.x - location.x) + (l.y - location.y) * (l.y - location.y))
@@ -193,7 +191,6 @@ public class Car {
 					}
 				}
 				sendingSocket.close();
-				recvingSocket.close();
 			} catch (UnsupportedEncodingException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
@@ -214,7 +211,7 @@ public class Car {
 		public void run() {
 			try {
 				BufferedReader br = new BufferedReader(new InputStreamReader(c.recvingSocket.getInputStream()));
-				while (!c.recvingSocket.isClosed()) {
+				while (authorized) {
 					String command = this.readPackage(2, br);
 					String host = this.getFieldValue(command, "HOST");
 					if (command.indexOf("MOVE") != -1) {
@@ -225,6 +222,7 @@ public class Car {
 						// TODO
 					}
 				}
+				recvingSocket.close();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

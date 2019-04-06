@@ -45,7 +45,6 @@ public class UserInterface extends JFrame {
 	private static final int wrongValue = -1000;
 	private JPanel contentPane;
 	private JTextField speedJTextField;
-	private JTextField directionJTextField;
 	private NewPanel rightPanel, head;
 	private LogOn logOn;
 	private UserInterface jf = this;
@@ -55,6 +54,7 @@ public class UserInterface extends JFrame {
 	private int userPointx = wrongValue, userPointy = wrongValue;
 	private Timer timer;
 	private JComboBox comboBox;
+	private JRadioButton autoCorrectRadio;
 
 	/**
 	 * Launch the application.
@@ -62,13 +62,6 @@ public class UserInterface extends JFrame {
 	public static void main(String[] args) {
 		UserInterface frame = new UserInterface();
 		frame.setVisible(true);
-		try {
-			System.in.read();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		frame.repaint();
 	}
 
 	/**
@@ -113,10 +106,15 @@ public class UserInterface extends JFrame {
 		JMenuItem logOffJmenuitem = new JMenuItem("\u6CE8\u9500");
 		logOffJmenuitem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				if(authorized) {
 				client.logOff();
 				jf.head.resetPath("src//default.png");
 				jf.userNameLabel.setText("用户：");
 				jf.authorized = false;
+				}
+				else {
+					JOptionPane.showMessageDialog(null, "未登录");
+				}
 			}
 		});
 		logOnJmenu.add(logOffJmenuitem);
@@ -165,10 +163,18 @@ public class UserInterface extends JFrame {
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON1) {
-					Location l = coordinateHelper(e.getX(),e.getY());
-					userPointx = (int) (l.x - 10);
-					userPointy = (int) (l.y - 10);
-					rightPanel.repaint();
+					if(autoCorrectRadio.isSelected()) {
+						Location l = coordinateHelper(e.getX(),e.getY());
+						userPointx = (int) (l.x - 10);
+						userPointy = (int) (l.y - 10);
+						rightPanel.repaint();
+					}
+					else {
+						userPointx = e.getX()-10;
+						userPointy = e.getY()-10;
+						rightPanel.repaint();
+					}
+					
 				}
 			}
 
@@ -180,7 +186,10 @@ public class UserInterface extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				rightPanel.repaint();
 				synchronized(client.carVelocity) {
-					jf.speedJTextField.setText(client.carVelocity.get("car"+comboBox.getSelectedIndex())+"m/s");
+					double speed = 0;
+					if(client.carVelocity.get("car"+comboBox.getSelectedIndex())!=null)
+						speed = client.carVelocity.get("car"+comboBox.getSelectedIndex());
+					jf.speedJTextField.setText(speed+"m/s");
 				}
 			}
 		});
@@ -191,12 +200,13 @@ public class UserInterface extends JFrame {
 		contentPane.add(leftPanel);
 		leftPanel.setLayout(null);
 
-		JRadioButton autoCorrectRadio = new JRadioButton("\u81EA\u52A8\u7EA0\u6B63\u529F\u80FD");
+		autoCorrectRadio = new JRadioButton("\u81EA\u52A8\u7EA0\u6B63\u529F\u80FD");
 		autoCorrectRadio.setBounds(43, 212, 119, 27);
 		autoCorrectRadio.setSelected(true);
 		leftPanel.add(autoCorrectRadio);
 
 		speedJTextField = new JTextField();
+		speedJTextField.setEditable(false);
 		speedJTextField.setText("0m/s");
 		speedJTextField.setBounds(43, 264, 119, 38);
 		leftPanel.add(speedJTextField);
@@ -205,16 +215,6 @@ public class UserInterface extends JFrame {
 		JLabel speedJlabel = new JLabel("\u9664\u51B0\u8F66\u884C\u9A76\u901F\u5EA6");
 		speedJlabel.setBounds(43, 245, 119, 18);
 		leftPanel.add(speedJlabel);
-
-		directionJTextField = new JTextField();
-		directionJTextField.setText("\u6B63\u5317");
-		directionJTextField.setBounds(43, 346, 119, 38);
-		leftPanel.add(directionJTextField);
-		directionJTextField.setColumns(10);
-
-		JLabel directionJlabel = new JLabel("\u9664\u51B0\u8F66\u884C\u9A76\u65B9\u5411");
-		directionJlabel.setBounds(43, 328, 119, 18);
-		leftPanel.add(directionJlabel);
 
 		Component verticalGlue = Box.createVerticalGlue();
 		verticalGlue.setBounds(212, 0, 0, 536);
@@ -230,12 +230,12 @@ public class UserInterface extends JFrame {
 		leftPanel.add(userNameLabel);
 
 		JLabel selectedCarJlabel = new JLabel("\u9009\u62E9\u5F53\u524D\u5C0F\u8F66");
-		selectedCarJlabel.setBounds(43, 397, 119, 18);
+		selectedCarJlabel.setBounds(43, 315, 119, 18);
 		leftPanel.add(selectedCarJlabel);
 
 		comboBox = new JComboBox();
 		comboBox.setModel(new DefaultComboBoxModel(new String[] {"car1", "car2", "car3"}));
-		comboBox.setBounds(43, 419, 119, 38);
+		comboBox.setBounds(43, 346, 119, 38);
 		leftPanel.add(comboBox);
 
 		JButton movingCarbutton = new JButton("\u79FB\u52A8\u5C0F\u8F66");
@@ -252,7 +252,7 @@ public class UserInterface extends JFrame {
 				client.moveCar(comboBox.getSelectedIndex(), userPointx, userPointy);
 			}
 		});
-		movingCarbutton.setBounds(43, 466, 113, 27);
+		movingCarbutton.setBounds(43, 415, 113, 27);
 		leftPanel.add(movingCarbutton);
 		
 		JButton stopMovingButton = new JButton("\u505C\u6B62\u79FB\u52A8");
@@ -265,7 +265,7 @@ public class UserInterface extends JFrame {
 				client.stopCar(comboBox.getSelectedIndex());
 			}
 		});
-		stopMovingButton.setBounds(43, 506, 113, 27);
+		stopMovingButton.setBounds(43, 468, 113, 27);
 		leftPanel.add(stopMovingButton);
 		String s = "abc";
 		s.split("\\n");
@@ -381,7 +381,6 @@ public class UserInterface extends JFrame {
 
 		@Override
 		public void paintComponent(Graphics g) {
-			System.out.println(1);
 			super.paintComponent(g);
 			ImageIcon icon = new ImageIcon(path);// 003.jpg是测试图片在项目的根目录下
 			g.drawImage(icon.getImage(), 0, 0, getSize().width, getSize().height, this);// 图片会自动缩放
