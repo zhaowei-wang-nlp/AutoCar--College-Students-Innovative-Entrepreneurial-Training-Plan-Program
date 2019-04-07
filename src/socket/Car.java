@@ -34,8 +34,7 @@ public class Car {
 		this.password = password;
 	}
 
-	public void logOn() throws Exception {
-		try {
+	public void logOn() throws IOException, Exception{
 			sendingSocket = new Socket(host, portForSending);
 
 			System.out.println("Car init");
@@ -79,9 +78,6 @@ public class Car {
 			System.out.println("Third handshaking sent");
 			recvingSocket.getOutputStream().write(("HOST:" + carName + "\r\n" + "FUCTION:BUILD\r\n").getBytes("utf-8"));
 			System.out.println("Connection built");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 
 	private Location refreshLocation() {
@@ -115,7 +111,10 @@ public class Car {
 						authorized = true;
 						new Thread(new CarSendingInfo()).start();
 						new Thread(new CarRecvingInfo(this)).start();
-					} catch (Exception e) {
+					} catch(IOException e) {
+						e.printStackTrace();
+					}
+					catch (Exception e) {
 						System.out.println("failed to log on");
 						e.printStackTrace();
 					}
