@@ -39,6 +39,7 @@ import socket.Location;
 
 import javax.swing.SwingConstants;
 import javax.swing.Timer;
+import java.awt.event.MouseAdapter;
 
 public class UserInterface extends JFrame {
 	/**
@@ -93,48 +94,42 @@ public class UserInterface extends JFrame {
 		menuBar.setBounds(0, 0, 982, 34);
 		contentPane.add(menuBar);
 
-		JMenu logOnJmenu = new JMenu("\u767B\u5F55\u4E0E\u6CE8\u9500");
-
-		menuBar.add(logOnJmenu);
-
-		JMenuItem logOnJmenuitem = new JMenuItem("\u767B\u5F55");
-		logOnJmenuitem.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
+		JMenu logOnJmenu = new JMenu("\u767B\u5F55");
+		logOnJmenu.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
 				logOn.setVisible(true);
 				logOn.setAlwaysOnTop(true);
 			}
 		});
-		logOnJmenu.add(logOnJmenuitem);
 
-		JMenuItem logOffJmenuitem = new JMenuItem("\u6CE8\u9500");
-		logOffJmenuitem.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
+		menuBar.add(logOnJmenu);
+
+		JMenu logOffJmenu = new JMenu("\u6CE8\u9500");
+		logOffJmenu.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
 				if(authorized) {
-				client.logOff();
-				jf.head.resetPath("src//default.png");
-				jf.userNameLabel.setText("用户：");
-				jf.authorized = false;
-				}
-				else {
-					JOptionPane.showMessageDialog(null, "未登录");
-				}
+					client.logOff();
+					jf.head.resetPath("src//default.png");
+					jf.userNameLabel.setText("用户：");
+					jf.authorized = false;
+					}
+					else {
+						JOptionPane.showMessageDialog(null, "未登录");
+					}
 			}
 		});
-		logOnJmenu.add(logOffJmenuitem);
-
-		JMenu cameraJmenu = new JMenu("\u6444\u50CF\u5934");
-		menuBar.add(cameraJmenu);
-
-		JMenuItem preCameraJmenuitem = new JMenuItem("\u524D\u6444\u50CF\u5934");
-		cameraJmenu.add(preCameraJmenuitem);
-
-		JMenuItem postCameraJmenuitem = new JMenuItem("\u540E\u6444\u50CF\u5934");
-		cameraJmenu.add(postCameraJmenuitem);
-
-		JMenu mapJmenu = new JMenu("\u5730\u56FE");
-		menuBar.add(mapJmenu);
+		menuBar.add(logOffJmenu);
 
 		JMenu aboutUsJmenu = new JMenu("\u5173\u4E8E\u6211\u4EEC");
+		aboutUsJmenu.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent arg0) {
+				JOptionPane.showMessageDialog(null, "欢迎使用智能除冰车,制作人:张天怡，胡振宇，顾皞，王昭为，陈浩南","关于我们"
+						,JOptionPane.INFORMATION_MESSAGE);
+			}
+		});
 		menuBar.add(aboutUsJmenu);
 
 		rightPanel = new NewPanel("src//map.png");
@@ -328,7 +323,8 @@ public class UserInterface extends JFrame {
 						sf.head.resetPath("src//" + userName + ".jpg");
 						jtf1.setText("");
 						jpf1.setText("");
-						lg.setVisible(false);
+						//lg.setVisible(false);
+						//jl1.setText("");
 					} else if (prompt.equals("Invalid username"))
 						jl1.setText("用户名无效");
 					else if (prompt.equals("Invalid password"))

@@ -43,5 +43,5 @@ DISCONNECT
 
 当用户在握手的时候出现异常（比如密码输入错误），直接在run方法中处理异常，然后保证处理异常之后run方法结束，即线程结束。用户在再次输入密码的时候，服务器重新开线程和用户建立socket连接。
 car:建立连接ok 发送信息(location)ok 接受信息(move,cease)ok
-client:建立连接ok 发送信息(move,cease) 接受信息(location)ok 辅助选点 屏幕坐标和地球坐标的换算 速度显示ok 关于我们
+client:建立连接ok 发送信息(move,cease) 接受信息(location)ok 具体move指令内容计算方法 辅助选点 屏幕坐标和地球坐标的换算 速度显示ok 关于我们ok
 server:建立连接ok 接收消息(move,cease,location) 转发消息ok
