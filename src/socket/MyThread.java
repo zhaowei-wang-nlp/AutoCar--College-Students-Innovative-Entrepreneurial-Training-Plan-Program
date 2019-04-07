@@ -24,26 +24,21 @@ public class MyThread {
 		return s.substring(start, end);
 	}
 
-	protected String readPackage(int n, BufferedReader br) {
+	protected String readPackage(int n, BufferedReader br) throws IOException{
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < n; i++) {
-			try {
 				sb.append(br.readLine() + "\r\n");
-			} catch (IOException e) {
-				System.out.println("Read Packet Wrongly");
-				e.printStackTrace();
-			}
 		}
 		return sb.toString();
 	}
 
-	protected String handShaking(Socket socket) throws Exception {// 将异常抛到run方法中
+	protected String handShaking(Socket socket) throws IOException, Exception {// 将异常抛到run方法中
 		//第一次握手
 		BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		String s = readPackage(3, br);
 		String host = getFieldValue(s, "HOST");
 		String password = getFieldValue(s, "CODE");
-		if (Server.clientMap.get(host) != null)
+		if (Server.usersMap.get(host) != null)
 			isUser = true;
 		else if (Server.carMap.get(host) != null)
 			isUser = false;
@@ -55,7 +50,7 @@ public class MyThread {
 		
 		Map<String, String> map;
 		if (isUser)
-			map = Server.clientMap;
+			map = Server.usersMap;
 		else
 			map = Server.carMap;
 		String rightPassword = map.get(host);
@@ -68,7 +63,7 @@ public class MyThread {
 
 		// second handshake
 		socket.getOutputStream().write(("HOST:" + host + "\r\n" + "FUCTION:PERMISSION\r\n").getBytes("utf-8"));
-		System.out.println("PERSION sent");
+		System.out.println("Permission sent");
 
 		// thrid handshake
 		s = readPackage(2, br);

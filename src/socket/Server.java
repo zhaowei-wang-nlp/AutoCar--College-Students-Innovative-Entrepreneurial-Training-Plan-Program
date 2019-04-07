@@ -14,8 +14,8 @@ import java.util.List;
 import java.util.Map;
 
 public class Server {
-	static Map<String,String> clientMap = Collections.synchronizedMap(new HashMap<String,String>());
-	static Map<String,State> clientState = Collections.synchronizedMap(new HashMap<String,State>());
+	static Map<String,String> usersMap = Collections.synchronizedMap(new HashMap<String,String>());
+	static Map<String,State> usersState = Collections.synchronizedMap(new HashMap<String,State>());
 	static Map<String,String> carMap = Collections.synchronizedMap(new HashMap<String,String>());
 	static Map<String,State> carState = Collections.synchronizedMap(new HashMap<String,State>());
 	public static void main(String[] args) {
@@ -29,8 +29,8 @@ public class Server {
 			String line;
 			while((line = buffer.readLine())!=null) {
 				String[] user = line.split("\\s");
-				clientMap.put(user[0], user[1]);
-				clientState.put(user[0], new State());
+				usersMap.put(user[0], user[1]);
+				usersState.put(user[0], new State());
 			}
 			buffer.close();
 		} catch (FileNotFoundException e) {

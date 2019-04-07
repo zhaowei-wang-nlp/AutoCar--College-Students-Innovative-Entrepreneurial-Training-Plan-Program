@@ -10,7 +10,6 @@ public class RecvingThread extends MyThread implements Runnable {
 	RecvingThread(Socket socket) {
 		super(socket);
 	}
-
 	@Override
 	public void run() {
 		try {
@@ -21,6 +20,7 @@ public class RecvingThread extends MyThread implements Runnable {
 			 */
 
 			String host = this.handShaking(socket);
+			
 			String s;
 			if (isUser) {
 				while (true) {
@@ -36,8 +36,8 @@ public class RecvingThread extends MyThread implements Runnable {
 						int len = socket.getInputStream().read(bytes);
 						if (new String(bytes, 0, len, "utf-8").equals("ALREADY DISCONNECT")) {
 							System.out.println(host + "log off");
-							synchronized (Server.clientState.get(host)) {
-									Server.clientState.get(host).online = false;
+							synchronized (Server.usersState.get(host)) {
+									Server.usersState.get(host).online = false;
 								}
 							socket.close();
 							break;
@@ -54,10 +54,10 @@ public class RecvingThread extends MyThread implements Runnable {
 							int start = s.indexOf("ALL");
 							String sub1 = s.substring(0, start);
 							String sub2 = s.substring(start + 3, s.length());
-							for (Map.Entry<String, State> e : Server.clientState.entrySet()) {
-								synchronized (Server.clientState.get(e.getKey())) {
+							for (Map.Entry<String, State> e : Server.usersState.entrySet()) {
+								synchronized (Server.usersState.get(e.getKey())) {
 									if (e.getValue().online)
-										this.storeUserInfo(sub1 + e.getValue() + sub2);
+										this.storeUserInfo(sub1 + e.getKey() + sub2);
 								}
 							}
 						} else {
@@ -87,9 +87,10 @@ public class RecvingThread extends MyThread implements Runnable {
 		}
 	}
 
-	private void storeCarInfo(String s) {
+	void storeCarInfo(String s) {
 		String command = s.split("\r\n")[1];
-		String carName = command.split("\\s")[0];
+		int start = command.indexOf(":")+1;
+		String carName = command.split("\\s")[0].substring(start);
 		synchronized (Server.carState.get(carName)) {
 			if (Server.carState.get(carName).online) {
 				Server.carState.get(carName).info.add(s);
@@ -102,12 +103,12 @@ public class RecvingThread extends MyThread implements Runnable {
 
 	private void storeUserInfo(String s) {
 		String command = s.split("\r\n")[1];// 第二行
-		int start = s.indexOf(":") + 1;// 用冒号分割
+		int start = command.indexOf(":") + 1;// 用冒号分割
 		String userName = command.split("\\s")[0].substring(start);
-		synchronized (Server.clientState.get(userName)) {
-			if (Server.clientState.get(userName).online) {
-				Server.clientState.get(userName).info.add(s);
-				Server.clientState.get(userName).notifyAll();
+		synchronized (Server.usersState.get(userName)) {
+			if (Server.usersState.get(userName).online) {
+				Server.usersState.get(userName).info.add(s);
+				Server.usersState.get(userName).notifyAll();
 			} else {
 				// TODO
 			}

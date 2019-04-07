@@ -13,8 +13,6 @@ import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Toolkit;
-import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
 import javax.swing.ImageIcon;
@@ -33,6 +31,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.text.DecimalFormat;
 import java.awt.event.ActionEvent;
 
 import socket.Client;
@@ -42,6 +41,10 @@ import javax.swing.SwingConstants;
 import javax.swing.Timer;
 
 public class UserInterface extends JFrame {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private static final int wrongValue = -1000;
 	private JPanel contentPane;
 	private JTextField speedJTextField;
@@ -53,7 +56,7 @@ public class UserInterface extends JFrame {
 	private Client client = new Client();
 	private int userPointx = wrongValue, userPointy = wrongValue;
 	private Timer timer;
-	private JComboBox comboBox;
+	private JComboBox<String> comboBox;
 	private JRadioButton autoCorrectRadio;
 
 	/**
@@ -181,15 +184,15 @@ public class UserInterface extends JFrame {
 		});
 		
 
-		timer = new Timer(5000, new ActionListener() {
+		timer = new Timer(500, new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				rightPanel.repaint();
 				synchronized(client.carVelocity) {
 					double speed = 0;
-					if(client.carVelocity.get("car"+comboBox.getSelectedIndex())!=null)
-						speed = client.carVelocity.get("car"+comboBox.getSelectedIndex());
-					jf.speedJTextField.setText(speed+"m/s");
+					if(client.carVelocity.get(comboBox.getModel().getElementAt(comboBox.getSelectedIndex()))!=null)
+						speed = client.carVelocity.get(comboBox.getModel().getElementAt(comboBox.getSelectedIndex()));
+					jf.speedJTextField.setText(new DecimalFormat("#.00").format(speed)+"m/s");
 				}
 			}
 		});
@@ -233,8 +236,8 @@ public class UserInterface extends JFrame {
 		selectedCarJlabel.setBounds(43, 315, 119, 18);
 		leftPanel.add(selectedCarJlabel);
 
-		comboBox = new JComboBox();
-		comboBox.setModel(new DefaultComboBoxModel(new String[] {"car1", "car2", "car3"}));
+		comboBox = new JComboBox<>();
+		comboBox.setModel(new DefaultComboBoxModel<String>(new String[] {"car1", "car2", "car3"}));
 		comboBox.setBounds(43, 346, 119, 38);
 		leftPanel.add(comboBox);
 
@@ -249,7 +252,7 @@ public class UserInterface extends JFrame {
 					JOptionPane.showMessageDialog(null, "没有选中目标点");
 					return;
 				}
-				client.moveCar(comboBox.getSelectedIndex(), userPointx, userPointy);
+				client.moveCar(comboBox.getModel().getElementAt(comboBox.getSelectedIndex()), userPointx, userPointy);
 			}
 		});
 		movingCarbutton.setBounds(43, 415, 113, 27);
@@ -262,7 +265,7 @@ public class UserInterface extends JFrame {
 					JOptionPane.showMessageDialog(null, "未登录");
 					return;
 				}
-				client.stopCar(comboBox.getSelectedIndex());
+				client.stopCar(comboBox.getModel().getElementAt(comboBox.getSelectedIndex()));
 			}
 		});
 		stopMovingButton.setBounds(43, 468, 113, 27);
@@ -279,6 +282,10 @@ public class UserInterface extends JFrame {
 
 	public class LogOn extends JFrame { // 继承JFrame顶层容器类
 
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		// 定义组件
 		JPanel jp1, jp2, jp3, jp4; // 定义面板
 		JTextField jtf1; // 定义文本框
@@ -368,6 +375,10 @@ public class UserInterface extends JFrame {
 	}
 
 	class NewPanel extends JPanel {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		String path;
 
 		public NewPanel(String path) {

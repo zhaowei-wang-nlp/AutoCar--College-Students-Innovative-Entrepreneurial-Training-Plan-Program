@@ -22,15 +22,10 @@ public class Client {
 	public final Map<String, Location> carLocation = Collections.synchronizedMap(new HashMap<>());
 	public final Map<String, Double> carVelocity = Collections.synchronizedMap(new HashMap<>());
 
-	private String readPackage(int n, BufferedReader br) {
+	private String readPackage(int n, BufferedReader br) throws IOException{
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < n; i++) {
-			try {
 				sb.append(br.readLine() + "\r\n");
-			} catch (IOException e) {
-				System.out.println("Read Packet Wrongly");
-				e.printStackTrace();
-			}
 		}
 		return sb.toString();
 	}
@@ -69,10 +64,10 @@ public class Client {
 			e.printStackTrace();
 		}
 	}
-	public void moveCar(int selectedCar,int userPointx,int userPointy) {
+	public void moveCar(String selectedCar,int userPointx,int userPointy) {
 		try {
-			StringBuilder sb = new StringBuilder();
-			Location current = carLocation.get("car"+selectedCar);
+			StringBuilder sb = new StringBuilder(selectedCar);
+			Location current = carLocation.get(selectedCar);
 			sb.append(" X "+(current.x-userPointx));
 			sb.append(" Y "+(current.y-userPointy));
 			String command = "HOST:" + userName+"\r\n";
@@ -87,9 +82,9 @@ public class Client {
 		}
 	}
 
-	public void stopCar(int car) {
+	public void stopCar(String car) {
 		try {
-			sendingSocket.getOutputStream().write(("HOST:" + userName + "\r\n" + "CEASE:" + "car"+car+"\r\n").getBytes("utf-8"));
+			sendingSocket.getOutputStream().write(("HOST:" + userName + "\r\n" + "CEASE:" + car +"\r\n").getBytes("utf-8"));
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -160,7 +155,7 @@ public class Client {
 			try {
 				BufferedReader br = new BufferedReader(new InputStreamReader(client.recvingSocket.getInputStream()));
 				while(!client.recvingSocket.isClosed()) {
-					String command = this.readPackage(2, br);
+					String command = readPackage(2, br);
 					String host = this.getFieldValue(command, "HOST");
 					
 					if(command.indexOf("LOCATION")!=-1) {
@@ -171,7 +166,7 @@ public class Client {
 								Double.parseDouble(sarray[2])));
 						}
 						synchronized(client.carVelocity) {
-							client.carVelocity.put(host, Double.parseDouble(sarray[2]));
+							client.carVelocity.put(host, Double.parseDouble(sarray[3]));
 						}
 						//此处只使用了一个操作，所以能保证原子性
 					}
@@ -188,18 +183,7 @@ public class Client {
 			int end = s.indexOf("\r\n", start);
 			return s.substring(start, end);
 		}
-		private String readPackage(int n, BufferedReader br) {
-			StringBuilder sb = new StringBuilder();
-			for (int i = 0; i < n; i++) {
-				try {
-					sb.append(br.readLine() + "\r\n");
-				} catch (IOException e) {
-					System.out.println("Read Packet Wrongly");
-					e.printStackTrace();
-				}
-			}
-			return sb.toString();
-		}
+
 	}
 }
 

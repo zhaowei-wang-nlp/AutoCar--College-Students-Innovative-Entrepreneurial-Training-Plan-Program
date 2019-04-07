@@ -2,6 +2,7 @@ package socket;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Map;
 
 public class SendingThread extends MyThread implements Runnable{
 	public SendingThread(Socket socket) {
@@ -16,16 +17,23 @@ public class SendingThread extends MyThread implements Runnable{
 			
 			String host = this.handShaking(socket);
 			if(isUser) {
-			synchronized(Server.clientState.get(host)) {
-				Server.clientState.get(host).online = true;
+			synchronized(Server.usersState.get(host)) {
+				Server.usersState.get(host).online = true;
 			}
 			
+			System.out.println("online users");
+			for(Map.Entry<String, State> e:Server.usersState.entrySet()) {
+				if(e.getValue().online) {
+					System.out.print(e.getKey()+"  ");
+				}
+			}
+			System.out.println();
 			
-			while(Server.clientState.get(host).online) {
-				synchronized(Server.clientState.get(host)) {
-					Server.clientState.get(host).wait();
-					while(!Server.clientState.get(host).info.isEmpty()) {
-						String info = Server.clientState.get(host).info.get(0);
+			while(Server.usersState.get(host).online) {
+				synchronized(Server.usersState.get(host)) {
+					Server.usersState.get(host).wait();
+					while(!Server.usersState.get(host).info.isEmpty()) {
+						String info = Server.usersState.get(host).info.remove(0);
 						socket.getOutputStream().write(info.getBytes("utf-8"));
 					}
 				}
@@ -37,11 +45,20 @@ public class SendingThread extends MyThread implements Runnable{
 				synchronized(Server.carState.get(host)) {
 					Server.carState.get(host).online = true;
 				}
+				
+				System.out.println("online cars:");
+				for(Map.Entry<String, State> e:Server.carState.entrySet()) {
+					if(e.getValue().online) {
+						System.out.print(e.getKey()+"  ");
+					}
+				}
+				System.out.println();
+				
 				while(Server.carState.get(host).online) {
 					synchronized(Server.carState.get(host)) {
 						Server.carState.get(host).wait();
 						while(!Server.carState.get(host).info.isEmpty()) {
-							String info = Server.carState.get(host).info.get(0);
+							String info = Server.carState.get(host).info.remove(0);
 							socket.getOutputStream().write(info.getBytes("utf-8"));
 						}
 					}

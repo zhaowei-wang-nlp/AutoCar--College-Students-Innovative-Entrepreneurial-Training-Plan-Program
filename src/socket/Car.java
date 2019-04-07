@@ -26,7 +26,7 @@ public class Car {
 	public static void main(String[] args) {
 		// 用到小车的时候此处可以改成用args传递小车名字和密码
 		Car car = new Car("car1","abc");
-		car.showMenu();
+		car.showMenu();	
 	}
 
 	public Car(String carName, String password) {
@@ -93,7 +93,7 @@ public class Car {
 		} else {
 			double x = location.x + r.nextDouble() * 20;
 			double y = location.y + r.nextDouble() * 20;
-			return new Location(x, y);
+			return new Location(x%500, y%500);
 		}
 	}
 
@@ -133,15 +133,10 @@ public class Car {
 			}
 		}
 
-	private String readPackage(int n, BufferedReader br) {
+	private String readPackage(int n, BufferedReader br) throws IOException{
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < n; i++) {
-			try {
 				sb.append(br.readLine() + "\r\n");
-			} catch (IOException e) {
-				System.out.println("Read Packet Wrongly");
-				e.printStackTrace();
-			}
 		}
 		return sb.toString();
 	}
@@ -171,8 +166,11 @@ public class Car {
 						double speed = Math
 								.sqrt((l.x - location.x) * (l.x - location.x) + (l.y - location.y) * (l.y - location.y))
 								/ (currentTime - time);
-						sendingSocket.getOutputStream().write(("HOST:" + carName + "\r\nLOCATION:ALL " + location.x
-								+ " " + location.y + " " + speed + "\r\n").getBytes("utf-8"));
+						speed *= 1000;
+						sendingSocket.getOutputStream().write(("HOST:" + carName + "\r\nLOCATION:ALL " + l.x
+								+ " " + l.y + " " + speed + "\r\n").getBytes("utf-8"));
+						location = l;
+						time = currentTime;
 					}
 					Thread.sleep(500);
 				} catch (IOException e) {
@@ -212,8 +210,7 @@ public class Car {
 			try {
 				BufferedReader br = new BufferedReader(new InputStreamReader(c.recvingSocket.getInputStream()));
 				while (authorized) {
-					String command = this.readPackage(2, br);
-					String host = this.getFieldValue(command, "HOST");
+					String command = readPackage(2, br);
 					if (command.indexOf("MOVE") != -1) {
 						c.move();
 						// TODO
@@ -232,19 +229,6 @@ public class Car {
 			int start = s.indexOf(field + ":") + field.length() + 1;
 			int end = s.indexOf("\r\n", start);
 			return s.substring(start, end);
-		}
-
-		private String readPackage(int n, BufferedReader br) {
-			StringBuilder sb = new StringBuilder();
-			for (int i = 0; i < n; i++) {
-				try {
-					sb.append(br.readLine() + "\r\n");
-				} catch (IOException e) {
-					System.out.println("Read Packet Wrongly");
-					e.printStackTrace();
-				}
-			}
-			return sb.toString();
 		}
 	}
 }
